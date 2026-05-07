@@ -14,7 +14,7 @@ camerax = "1.6.0"
 androidx-camerax-core = {group = "androidx.camera", name = "camera-core", version.ref = "camerax"}
 androidx-camerax-camera2 = {group = "androidx.camera", name = "camera-camera2", version.ref = "camerax"}
 androidx-camerax-lifecycle = {group = "androidx.camera", name = "camera-lifecycle", version.ref = "camerax"}
-
+androidx-camerax-view = {group = "androidx.camera", name = "camera-view", version.ref = "camerax"}
 androidx-core-ktx = { group = "androidx.core", name = "core-ktx", version.ref = "coreKtx" }
 junit = { group = "junit", name = "junit", version.ref = "junit" }
 androidx-junit = { group = "androidx.test.ext", name = "junit", version.ref = "junitVersion" }
