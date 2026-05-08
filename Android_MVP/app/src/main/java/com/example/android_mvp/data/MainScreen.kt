@@ -1,5 +1,6 @@
 package com.example.android_mvp.data
 
+import android.graphics.Bitmap
 import androidx.camera.core.CameraSelector
 import androidx.camera.core.ImageProxy
 import androidx.camera.view.CameraController
@@ -54,19 +55,18 @@ fun MainScreen(
     onRequestCameraClick: () -> Unit,
     modifier: Modifier = Modifier
 ) {
-    var latestPhoto by remember { mutableStateOf<ImageProxy?>(null) }
+    var latestPhoto by remember { mutableStateOf<Bitmap?>(null) }
 
     val context = LocalContext.current
     val lifecycleOwner = LocalLifecycleOwner.current
     val cameraController = remember {
         LifecycleCameraController(context).apply {
             cameraSelector = CameraSelector.DEFAULT_BACK_CAMERA
-            bindToLifecycle(lifecycleOwner)
             setEnabledUseCases(CameraController.IMAGE_CAPTURE)
         }
     }
 
-    var classificationText by remember { mutableStateOf("Сфотографируйте чтобы распознать") }
+    var classificationText by remember { mutableStateOf("") }
     var confidenceValue by remember { mutableFloatStateOf(0f) }
 
 
@@ -100,37 +100,44 @@ fun MainScreen(
                 contentAlignment = Alignment.Center
             ) {
                 if (hasPermission) {
-                    if(latestPhoto == null) {
+                    if(latestPhoto == null) { //showing camera if image is null
                         CameraPreview(
                             cameraController, lifecycleOwner, modifier
                         )
                     }else{
-                        latestPhoto?.let { imageProxy ->
-                            val bitmap = imageProxy.toCorrectlyRotatedBitmap()
-
-                            Image(
-                                bitmap = bitmap.asImageBitmap(),
+                            Image( //showing image instead of camera
+                                bitmap = latestPhoto!!.asImageBitmap(),
                                 contentDescription = stringResource(R.string.photo_description),
                                 modifier = Modifier.fillMaxSize(),
                                 contentScale = ContentScale.Crop
                             )
 
-                        }
                     }
-                } else {
+                } else { //showing button to get camera permission
                     Button(onClick = onRequestCameraClick) { Text(stringResource(R.string.ask_permission_button)) }
                 }
             }
             ButtonsController(
                 onTakePhotoClick = {
-                    takePhoto(cameraController, context, ) { photo ->
-                        latestPhoto = photo
-                    }
+                    takePhoto(
+                        cameraController = cameraController,
+                        context = context,
+                        onClassificationResult = { label, confidence ->
+                            classificationText = label
+                            confidenceValue = confidence
+                        },
+                        onPhotoTaken = { bitmap ->
+                            latestPhoto = bitmap
+                        }
+                    )
                 },
                 onClearPhotoClick = {
                     latestPhoto = null
+                    classificationText = ""
+                    confidenceValue = 0f
+
                 },
-                latestPhoto,
+                latestPhoto = latestPhoto,
                 modifier = Modifier.weight(1f)
             )
             Box(
@@ -162,7 +169,7 @@ fun MainScreen(
 fun ButtonsController(
     onTakePhotoClick: () -> Unit,
     onClearPhotoClick: () -> Unit,
-    latestPhoto: ImageProxy?,
+    latestPhoto: Bitmap?,
     modifier: Modifier = Modifier,
 
 ) {
@@ -189,10 +196,7 @@ fun ButtonsController(
             }
         }else{
             IconButton(
-                onClick = {
-                    latestPhoto.close()
-                    onClearPhotoClick()
-                },
+                onClick = onClearPhotoClick,
                 modifier = Modifier
                     .size(72.dp)
                     .clip(CircleShape)
@@ -221,4 +225,3 @@ private fun PreviewMainScreen() {
     }
 
 }
-
