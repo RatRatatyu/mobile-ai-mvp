@@ -4,12 +4,10 @@ import android.content.Context
 import android.graphics.Bitmap
 import android.graphics.BitmapFactory
 import android.graphics.Matrix
-import android.net.Uri
 import android.util.Log
 import androidx.camera.core.ImageCapture
 import androidx.camera.core.ImageCaptureException
 import androidx.camera.core.ImageProxy
-import androidx.camera.view.CameraController
 import androidx.camera.view.LifecycleCameraController
 import androidx.camera.view.PreviewView
 import androidx.compose.foundation.layout.fillMaxSize
@@ -24,6 +22,7 @@ import com.example.android_mvp.R
 @Composable
 fun CameraPreview(
     cameraController: LifecycleCameraController,
+    lifecycleOwner: LifecycleOwner,
     modifier: Modifier
 ) {
 
@@ -36,6 +35,9 @@ fun CameraPreview(
                 this.controller = cameraController
             }
         },
+        update = {
+            cameraController.bindToLifecycle(lifecycleOwner)
+        }
     )
 }
 
@@ -52,6 +54,7 @@ fun takePhoto(
         object : ImageCapture.OnImageCapturedCallback() {
             override fun onCaptureSuccess(image: ImageProxy) {
                 onPhotoTaken(image)          // send raw photo
+
             }
 
             override fun onError(exception: ImageCaptureException) {
@@ -63,24 +66,27 @@ fun takePhoto(
 }
 
 fun ImageProxy.toCorrectlyRotatedBitmap(): Bitmap {
-    val buffer = planes[0].buffer
-    val bytes = ByteArray(buffer.remaining())
-    buffer.get(bytes)
+    try {
+        val buffer = planes[0].buffer
+        val bytes = ByteArray(buffer.remaining())
+        buffer.get(bytes)
 
-    // Decoding to Bitmap
-    val originalBitmap = BitmapFactory.decodeByteArray(bytes, 0, bytes.size)
+        val originalBitmap = BitmapFactory.decodeByteArray(bytes, 0, bytes.size)
 
-    // Correcting the rotation
-    val matrix = Matrix()
-    matrix.postRotate(imageInfo.rotationDegrees.toFloat())
+        val matrix = Matrix().apply {
+            postRotate(imageInfo.rotationDegrees.toFloat())
+        }
 
-    return Bitmap.createBitmap(
-        originalBitmap,
-        0,
-        0,
-        originalBitmap.width,
-        originalBitmap.height,
-        matrix,
-        true
-    )
+        return Bitmap.createBitmap(
+            originalBitmap,
+            0,
+            0,
+            originalBitmap.width,
+            originalBitmap.height,
+            matrix,
+            true
+        )
+    } finally {
+        close()
+    }
 }
