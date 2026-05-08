@@ -43,6 +43,9 @@ android {
 }
 
 dependencies {
+    implementation(libs.google.mlkit.detection)
+    implementation(libs.androidx.compose.icons.extended)
+    implementation(libs.coil.compose)
     implementation(libs.androidx.camerax.camera2)
     implementation(libs.androidx.camerax.core)
     implementation(libs.androidx.camerax.lifecycle)
@@ -55,6 +58,8 @@ dependencies {
     implementation(libs.androidx.compose.ui.graphics)
     implementation(libs.androidx.compose.ui.tooling.preview)
     implementation(libs.androidx.compose.material3)
+    implementation(libs.androidx.compose.foundation)
+    implementation(libs.androidx.ui)
     testImplementation(libs.junit)
     androidTestImplementation(libs.androidx.junit)
     androidTestImplementation(libs.androidx.espresso.core)
