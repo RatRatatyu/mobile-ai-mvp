@@ -9,8 +9,15 @@ lifecycleRuntimeKtx = "2.10.0"
 activityCompose = "1.13.0"
 composeBom = "2024.09.00"
 camerax = "1.6.0"
+coil = "2.7.0"
+foundation = "1.11.1"
+ui = "1.11.1"
+objectDetaction = "17.0.2"
 
 [libraries]
+google-mlkit-detection = {group = "com.google.mlkit", name= "object-detection", version.ref = "objectDetaction"}
+androidx-compose-icons-extended = { group = "androidx.compose.material", name = "material-icons-extended" }
+coil-compose = { group = "io.coil-kt", name = "coil-compose", version.ref = "coil" }
 androidx-camerax-core = {group = "androidx.camera", name = "camera-core", version.ref = "camerax"}
 androidx-camerax-camera2 = {group = "androidx.camera", name = "camera-camera2", version.ref = "camerax"}
 androidx-camerax-lifecycle = {group = "androidx.camera", name = "camera-lifecycle", version.ref = "camerax"}
@@ -29,6 +36,8 @@ androidx-compose-ui-tooling-preview = { group = "androidx.compose.ui", name = "u
 androidx-compose-ui-test-manifest = { group = "androidx.compose.ui", name = "ui-test-manifest" }
 androidx-compose-ui-test-junit4 = { group = "androidx.compose.ui", name = "ui-test-junit4" }
 androidx-compose-material3 = { group = "androidx.compose.material3", name = "material3" }
+androidx-compose-foundation = { group = "androidx.compose.foundation", name = "foundation", version.ref = "foundation" }
+androidx-ui = { group = "androidx.compose.ui", name = "ui", version.ref = "ui" }
 
 [plugins]
 android-application = { id = "com.android.application", version.ref = "agp" }
