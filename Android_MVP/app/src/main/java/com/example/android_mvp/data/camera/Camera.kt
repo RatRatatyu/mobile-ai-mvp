@@ -1,6 +1,11 @@
 package com.example.android_mvp.data.camera
 
 import android.content.Context
+import android.graphics.Bitmap
+import android.graphics.BitmapFactory
+import android.graphics.Matrix
+import android.net.Uri
+import android.util.Log
 import androidx.camera.core.ImageCapture
 import androidx.camera.core.ImageCaptureException
 import androidx.camera.core.ImageProxy
@@ -13,18 +18,16 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.viewinterop.AndroidView
 import androidx.core.content.ContextCompat
 import androidx.lifecycle.LifecycleOwner
+import com.example.android_mvp.R
 
 
 @Composable
 fun CameraPreview(
-    context: Context,
-    lifecycleOwner: LifecycleOwner,
-    cameraController: CameraController,
-
+    cameraController: LifecycleCameraController,
     modifier: Modifier
 ) {
 
-    val executor = ContextCompat.getMainExecutor(context)
+
 
     AndroidView(
         modifier = modifier.fillMaxSize(),
@@ -38,24 +41,46 @@ fun CameraPreview(
 
 
 fun takePhoto(
-    controller: LifecycleCameraController,
+    cameraController: LifecycleCameraController,
     context: Context,
-    onPhotoCaptured: (ImageProxy) -> Unit
+    onPhotoTaken: (ImageProxy?) -> Unit     //  returning ImageProxy
 ) {
-    controller.takePicture(
-        ContextCompat.getMainExecutor(context), // Выполняем в основном потоке для простоты колбэка
+    val executor = ContextCompat.getMainExecutor(context)
+
+    cameraController.takePicture(
+        executor,
         object : ImageCapture.OnImageCapturedCallback() {
             override fun onCaptureSuccess(image: ImageProxy) {
-                super.onCaptureSuccess(image)
-                onPhotoCaptured(image)
-                print("taken")
-
+                onPhotoTaken(image)          // send raw photo
             }
 
             override fun onError(exception: ImageCaptureException) {
-                // Тут обрабатываем ошибку, если, например, камера занята
+                Log.e("Camera", context.getString(R.string.error_photo), exception)
+                onPhotoTaken(null)
             }
         }
     )
 }
 
+fun ImageProxy.toCorrectlyRotatedBitmap(): Bitmap {
+    val buffer = planes[0].buffer
+    val bytes = ByteArray(buffer.remaining())
+    buffer.get(bytes)
+
+    // Decoding to Bitmap
+    val originalBitmap = BitmapFactory.decodeByteArray(bytes, 0, bytes.size)
+
+    // Correcting the rotation
+    val matrix = Matrix()
+    matrix.postRotate(imageInfo.rotationDegrees.toFloat())
+
+    return Bitmap.createBitmap(
+        originalBitmap,
+        0,
+        0,
+        originalBitmap.width,
+        originalBitmap.height,
+        matrix,
+        true
+    )
+}
