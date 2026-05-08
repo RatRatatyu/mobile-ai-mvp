@@ -5,6 +5,8 @@ import android.graphics.Bitmap
 import android.graphics.BitmapFactory
 import android.graphics.Matrix
 import android.util.Log
+import androidx.annotation.OptIn
+import androidx.camera.core.ExperimentalGetImage
 import androidx.camera.core.ImageCapture
 import androidx.camera.core.ImageCaptureException
 import androidx.camera.core.ImageProxy
@@ -17,6 +19,7 @@ import androidx.compose.ui.viewinterop.AndroidView
 import androidx.core.content.ContextCompat
 import androidx.lifecycle.LifecycleOwner
 import com.example.android_mvp.R
+import com.example.android_mvp.data.model.MlKitImageLabeler
 
 
 @Composable
@@ -45,15 +48,24 @@ fun CameraPreview(
 fun takePhoto(
     cameraController: LifecycleCameraController,
     context: Context,
-    onPhotoTaken: (ImageProxy?) -> Unit     //  returning ImageProxy
+    onClassificationResult: (String, Float) -> Unit,
+    onPhotoTaken: (Bitmap?) -> Unit     //  returning ImageProxy
 ) {
     val executor = ContextCompat.getMainExecutor(context)
 
     cameraController.takePicture(
         executor,
         object : ImageCapture.OnImageCapturedCallback() {
+            @OptIn(ExperimentalGetImage::class)
             override fun onCaptureSuccess(image: ImageProxy) {
-                onPhotoTaken(image)          // send raw photo
+
+                val bitmap = image.toCorrectlyRotatedBitmap()
+                onPhotoTaken(bitmap)
+
+                MlKitImageLabeler().analyze(bitmap,) { label, confidence ->
+                    onClassificationResult(label, confidence)   //  callback
+                }
+                image.close()
 
             }
 
@@ -66,27 +78,23 @@ fun takePhoto(
 }
 
 fun ImageProxy.toCorrectlyRotatedBitmap(): Bitmap {
-    try {
-        val buffer = planes[0].buffer
-        val bytes = ByteArray(buffer.remaining())
-        buffer.get(bytes)
+    val buffer = planes[0].buffer
+    val bytes = ByteArray(buffer.remaining())
+    buffer.get(bytes)
 
-        val originalBitmap = BitmapFactory.decodeByteArray(bytes, 0, bytes.size)
+    val originalBitmap = BitmapFactory.decodeByteArray(bytes, 0, bytes.size)
 
-        val matrix = Matrix().apply {
-            postRotate(imageInfo.rotationDegrees.toFloat())
-        }
-
-        return Bitmap.createBitmap(
-            originalBitmap,
-            0,
-            0,
-            originalBitmap.width,
-            originalBitmap.height,
-            matrix,
-            true
-        )
-    } finally {
-        close()
+    val matrix = Matrix().apply {
+        postRotate(imageInfo.rotationDegrees.toFloat())
     }
+
+    return Bitmap.createBitmap(
+        originalBitmap,
+        0,
+        0,
+        originalBitmap.width,
+        originalBitmap.height,
+        matrix,
+        true
+    )
 }
