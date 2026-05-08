@@ -1,3 +1,8 @@
 <resources>
-    <string name="app_name">Android_MVP</string>
+    <string name="app_name">Android App</string>
+    <string name="permission_denied">Разрешение отклонено пользователем</string>
+    <string name="permission_granteed">Разрешение на камеру получено</string>
+    <string name="ask_permission_button">Запросить разрешение на камеру</string>
+    <string name="error_photo">Ошибка съёмки</string>
+    <string name="photo_description">Сделанное фото</string>
 </resources>
