@@ -37,7 +37,7 @@ class ApiModel(){
     private val retrofit = Retrofit.Builder()
         .baseUrl("https://router.huggingface.co/hf-inference/")
         .addConverterFactory(GsonConverterFactory.create())
-        .build();
+        .build()
 
     val service: HuggingFaceApi = retrofit.create(HuggingFaceApi::class.java)
 
@@ -60,7 +60,7 @@ class ApiModel(){
 
 
         }catch (e: Exception){
-            Log.e("network", "Request failed", e);
+            Log.e("network", "Request failed", e)
 
         }
     }
