@@ -41,17 +41,21 @@ class ApiModel(){
 
     val service: HuggingFaceApi = retrofit.create(HuggingFaceApi::class.java)
 
-     suspend fun postI(imageBitmap: Bitmap, onResult: (String, Float) -> Unit){
+     suspend fun classifyImage(imageBitmap: Bitmap, onResult: (String, Float, Long) -> Unit){
+
+         val startTime = System.currentTimeMillis()
         val imageToButeArray = compressBitmap((imageBitmap))
         val requestBody = imageToButeArray.toRequestBody("image/jpeg".toMediaTypeOrNull())
+
         try {
-            Log.d("TOKEN", token)
             val result = service.postImage(
                 "models/google/vit-base-patch16-224",
                 "Bearer $token",
                 requestBody
             )
-            onResult(result.firstOrNull()?.label ?: "null", result.firstOrNull()?.score ?: 0f)
+            val endTime = System.currentTimeMillis()
+            val duration = endTime - startTime
+            onResult(result.firstOrNull()?.label ?: "null", result.firstOrNull()?.score ?: 0f, duration)
 
 
 
