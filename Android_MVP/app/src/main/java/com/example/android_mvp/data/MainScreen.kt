@@ -2,7 +2,6 @@ package com.example.android_mvp.data
 
 import android.graphics.Bitmap
 import androidx.camera.core.CameraSelector
-import androidx.camera.core.ImageProxy
 import androidx.camera.view.CameraController
 import androidx.camera.view.LifecycleCameraController
 import androidx.compose.foundation.Image
@@ -28,6 +27,8 @@ import androidx.compose.material3.TopAppBar
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableFloatStateOf
+import androidx.compose.runtime.mutableIntStateOf
+import androidx.compose.runtime.mutableLongStateOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
@@ -44,7 +45,7 @@ import androidx.lifecycle.compose.LocalLifecycleOwner
 import com.example.android_mvp.R
 import com.example.android_mvp.data.camera.CameraPreview
 import com.example.android_mvp.data.camera.takePhoto
-import com.example.android_mvp.data.camera.toCorrectlyRotatedBitmap
+
 
 
 
@@ -68,6 +69,7 @@ fun MainScreen(
 
     var classificationText by remember { mutableStateOf("") }
     var confidenceValue by remember { mutableFloatStateOf(0f) }
+    var timeTakenDuration by remember { mutableLongStateOf(0) }
 
 
     Scaffold(
@@ -122,7 +124,8 @@ fun MainScreen(
                     takePhoto(
                         cameraController = cameraController,
                         context = context,
-                        onClassificationResult = { label, confidence ->
+                        onClassificationResult = { label, confidence, duration ->
+                            timeTakenDuration = duration
                             classificationText = label
                             confidenceValue = confidence
                         },
@@ -157,6 +160,11 @@ fun MainScreen(
 
                     Text(
                         text = "Уверенность: ${(confidenceValue * 100).toInt()}%",
+                        style = MaterialTheme.typography.headlineSmall
+                    )
+
+                    Text(
+                        text = "Время предсказания: $timeTakenDuration мс",
                         style = MaterialTheme.typography.headlineSmall
                     )
                 }
