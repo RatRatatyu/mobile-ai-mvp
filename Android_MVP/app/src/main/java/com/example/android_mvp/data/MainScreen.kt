@@ -8,6 +8,7 @@ import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
@@ -22,15 +23,16 @@ import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Scaffold
+import androidx.compose.material3.Switch
 import androidx.compose.material3.Text
 import androidx.compose.material3.TopAppBar
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableFloatStateOf
-import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.runtime.mutableLongStateOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -47,8 +49,6 @@ import com.example.android_mvp.data.camera.CameraPreview
 import com.example.android_mvp.data.camera.takePhoto
 
 
-
-
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun MainScreen(
@@ -60,12 +60,14 @@ fun MainScreen(
 
     val context = LocalContext.current
     val lifecycleOwner = LocalLifecycleOwner.current
-    val cameraController = remember {
+    val cameraController = remember(latestPhoto == null) {
         LifecycleCameraController(context).apply {
             cameraSelector = CameraSelector.DEFAULT_BACK_CAMERA
             setEnabledUseCases(CameraController.IMAGE_CAPTURE)
         }
     }
+    val scope = rememberCoroutineScope()
+    var isOnDevice by remember { mutableStateOf(true) }
 
     var classificationText by remember { mutableStateOf("") }
     var confidenceValue by remember { mutableFloatStateOf(0f) }
@@ -81,6 +83,19 @@ fun MainScreen(
                         stringResource(R.string.app_name),
                         style = MaterialTheme.typography.titleLarge
                     )
+                },
+                actions = {
+                    Row (verticalAlignment = Alignment.CenterVertically){
+                        Text(
+                            "OnServer",
+                            style = MaterialTheme.typography.bodySmall,)
+                        Switch(
+                            checked = isOnDevice,
+                            onCheckedChange = { isOnDevice = !isOnDevice })
+                        Text(
+                            "OnDevice",
+                            style = MaterialTheme.typography.bodySmall,)
+                    }
                 }
             )
         }
@@ -129,6 +144,8 @@ fun MainScreen(
                             classificationText = label
                             confidenceValue = confidence
                         },
+                        isOnDevice = isOnDevice,
+                        scope = scope,
                         onPhotoTaken = { bitmap ->
                             latestPhoto = bitmap
                         }
@@ -143,36 +160,52 @@ fun MainScreen(
                 latestPhoto = latestPhoto,
                 modifier = Modifier.weight(1f)
             )
-            Box(
-                modifier = Modifier
-                    .fillMaxSize()
-                    .padding(all = 20.dp)
-                    .weight(1f)
-                    .clip(RoundedCornerShape(12.dp))
-                    .background(MaterialTheme.colorScheme.background),
-                contentAlignment = Alignment.CenterStart
-            ){
-                Column {
-                    Text(
-                        text = "Объект: $classificationText",
-                        style = MaterialTheme.typography.headlineSmall
-                    )
 
-                    Text(
-                        text = "Уверенность: ${(confidenceValue * 100).toInt()}%",
-                        style = MaterialTheme.typography.headlineSmall
-                    )
+            ModelResult(
+                classificationText,
+                confidenceValue,
+                timeTakenDuration,
+                modifier = Modifier.weight(1f)
+            )
 
-                    Text(
-                        text = "Время предсказания: $timeTakenDuration мс",
-                        style = MaterialTheme.typography.headlineSmall
-                    )
-                }
-            }
         }
     }
 }
 
+
+@Composable
+fun ModelResult(
+    classificationText: String,
+    confidenceValue: Float,
+    timeTakenDuration: Long,
+    modifier: Modifier = Modifier
+) {
+    Box(
+        modifier = modifier
+            .fillMaxSize()
+            .padding(all = 20.dp)
+            .clip(RoundedCornerShape(12.dp)),
+        contentAlignment = Alignment.CenterStart
+    ){
+
+        Column {
+            Text(
+                text = "Объект: $classificationText",
+                style = MaterialTheme.typography.headlineSmall
+            )
+
+            Text(
+                text = "Уверенность: ${(confidenceValue * 100).toInt()}%",
+                style = MaterialTheme.typography.headlineSmall
+            )
+
+            Text(
+                text = "Время предсказания: $timeTakenDuration мс",
+                style = MaterialTheme.typography.headlineSmall
+            )
+        }
+    }
+}
 @Composable
 fun ButtonsController(
     onTakePhotoClick: () -> Unit,
