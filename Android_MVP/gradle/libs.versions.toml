@@ -12,10 +12,16 @@ camerax = "1.6.0"
 coil = "2.7.0"
 foundation = "1.11.1"
 ui = "1.11.1"
-objectDetaction = "17.0.2"
+imageLabeling = "17.0.5"
+networking = "2.9.0"
+convertingJson = "2.9.0"
+logging = "4.10.0"
 
 [libraries]
-google-mlkit-detection = {group = "com.google.mlkit", name= "object-detection", version.ref = "objectDetaction"}
+web-squareup-retrofit ={ group = "com.squareup.retrofit2", name = "retrofit", version.ref = "networking" }
+web-squareup-logging = {group = "com.squareup.retrofit2",  name = "converter-gson",version.ref = "convertingJson" }
+web-squareup-okhttp3 = { group = "com.squareup.okhttp3", name = "logging-interceptor", version.ref = "logging" }
+google-mlkit-image-labeling = {group = "com.google.mlkit", name = "image-labeling", version.ref = "imageLabeling"}
 androidx-compose-icons-extended = { group = "androidx.compose.material", name = "material-icons-extended" }
 coil-compose = { group = "io.coil-kt", name = "coil-compose", version.ref = "coil" }
 androidx-camerax-core = {group = "androidx.camera", name = "camera-core", version.ref = "camerax"}

@@ -1,3 +1,12 @@
+import java.util.Properties
+import java.io.FileInputStream
+
+// Read local.properties
+val localProperties = Properties()
+val localPropertiesFile = rootProject.file("local.properties")
+if (localPropertiesFile.exists()) {
+    localProperties.load(FileInputStream(localPropertiesFile))
+}
 plugins {
     alias(libs.plugins.android.application)
     alias(libs.plugins.kotlin.android)
@@ -11,6 +20,9 @@ android {
     }
 
     defaultConfig {
+        val hfToken = localProperties.getProperty("HF_TOKEN") ?: "\"\""
+        buildConfigField("String", "HF_TOKEN", hfToken)
+
         applicationId = "com.example.android_mvp"
         minSdk = 24
         targetSdk = 36
@@ -37,13 +49,17 @@ android {
         jvmTarget = "11"
     }
     buildFeatures {
+        buildConfig = true
         viewBinding = true
         compose = true
     }
 }
 
 dependencies {
-    implementation(libs.google.mlkit.detection)
+    implementation(libs.web.squareup.logging)
+    implementation(libs.web.squareup.retrofit)
+    implementation(libs.web.squareup.okhttp3)
+    implementation(libs.google.mlkit.image.labeling)
     implementation(libs.androidx.compose.icons.extended)
     implementation(libs.coil.compose)
     implementation(libs.androidx.camerax.camera2)
