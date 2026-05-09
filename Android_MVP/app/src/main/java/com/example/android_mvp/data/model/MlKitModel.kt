@@ -15,12 +15,15 @@ class MlKitImageLabeler{
      val labeler = ImageLabeling.getClient(options)
 
 
-    fun analyze( bitmap: Bitmap, onResult: (String, Float) -> Unit){
+    fun analyze( bitmap: Bitmap, onResult: (String, Float, Long) -> Unit){
+        val startTime = System.currentTimeMillis()
         val image = InputImage.fromBitmap(bitmap, 0)
 
         labeler.process(image)
             .addOnSuccessListener { labels ->
-                onResult(labels.firstOrNull()?.text ?: "null", labels.firstOrNull()?.confidence ?: 0f)
+                val endTime = System.currentTimeMillis()
+                val duration = endTime - startTime
+                onResult(labels.firstOrNull()?.text ?: "null", labels.firstOrNull()?.confidence ?: 0f, duration)
 
 
             }
