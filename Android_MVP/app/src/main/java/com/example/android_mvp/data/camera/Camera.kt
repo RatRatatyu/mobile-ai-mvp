@@ -14,22 +14,15 @@ import androidx.camera.view.LifecycleCameraController
 import androidx.camera.view.PreviewView
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.viewinterop.AndroidView
 import androidx.core.content.ContextCompat
 import androidx.lifecycle.LifecycleOwner
-import androidx.lifecycle.ViewModel
-import androidx.lifecycle.ViewModelStore
 import com.example.android_mvp.R
 import com.example.android_mvp.data.model.ApiModel
-import com.example.android_mvp.data.model.HuggingFaceApi
 import com.example.android_mvp.data.model.MlKitImageLabeler
 import kotlinx.coroutines.CoroutineScope
-import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
-import okhttp3.Dispatcher
-import java.sql.Time
 
 
 @Composable
@@ -54,11 +47,13 @@ fun CameraPreview(
     )
 }
 
-
+val apiModel = ApiModel()
 fun takePhoto(
     cameraController: LifecycleCameraController,
     context: Context,
     onClassificationResult: (String, Float, Long) -> Unit,
+    isOnDevice: Boolean,
+    scope: CoroutineScope,
     onPhotoTaken: (Bitmap?) -> Unit     //  returning ImageProxy
 ) {
     val executor = ContextCompat.getMainExecutor(context)
@@ -71,16 +66,21 @@ fun takePhoto(
 
                 val bitmap = image.toCorrectlyRotatedBitmap()
                 onPhotoTaken(bitmap)
-                val apiModel = ApiModel()
 
-//                MlKitImageLabeler().analyze(bitmap) { label, confidence, duration ->
-//                    onClassificationResult(label, confidence, duration)   //  callback
-//                }
-                CoroutineScope(Dispatchers.IO).launch {
-                    apiModel.postI(bitmap) {label, confidence ->
-                        onClassificationResult(label, confidence, 0)
+                if(isOnDevice){
+                    MlKitImageLabeler().analyze(bitmap) { label, confidence, duration ->
+                    onClassificationResult(label, confidence, duration) }  //  callback
+                }else{
+                    scope.launch {
+                        apiModel.classifyImage(bitmap) {label, confidence, duration ->
+                            onClassificationResult(label, confidence, duration)
+                        }
+
                     }
                 }
+
+
+
                 image.close()
 
             }
