@@ -4,8 +4,13 @@ This Android application designed to demonstrate the architectural differences, 
 
 ---
 ## 📱 Screenshots
-![Screenshot_OnDevice.jpg](screenShots/Screenshot_OnServerr.jpg)
-![Screenshot_OnServer.jpg](screenShots/Screenshot_OnDevice.jpg)
+
+**On-device**  
+<img src="screenShots/screenShot_OnDevice.jpg" width="380" alt="Main Screen">
+
+**On-server**  
+<img src="screenShots/screenShot_OnServerr.jpg" width="380" alt="Comparison">
+
 # 🌟 Key Features
 
 ## Dual-Mode Inference
