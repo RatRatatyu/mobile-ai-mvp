@@ -4,12 +4,11 @@ This Android application designed to demonstrate the architectural differences, 
 
 ---
 ## 📱 Screenshots
+| **On-device (ML Kit)** | **On-server (Hugging Face ViT)** |
+|:---:|:---:|
+| <img src="screenShots/screenShot_OnDevice.jpg" width="220" alt="ML Kit Inference Result"> | <img src="screenShots/screenShot_OnServerr.jpg" width="220" alt="Hugging Face Inference Result"> |
 
-**On-device**  
-<img src="screenShots/screenShot_OnDevice.jpg" width="380" alt="Main Screen">
-
-**On-server**  
-<img src="screenShots/screenShot_OnServerr.jpg" width="380" alt="Comparison">
+---
 
 # 🌟 Key Features
 
