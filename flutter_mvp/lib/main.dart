@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_mvp/core/ui_state_provider.dart';
 import 'package:provider/provider.dart';
 
 import 'core/provider_menadger.dart';
@@ -10,7 +11,10 @@ void main() {
     MultiProvider(
       providers: [
         ChangeNotifierProvider(
-          create: (_) => PermissionProvider()..updateCameraStatus(), // 2. Check status immediately on creation
+            create: (_) => UiStateProvider()
+        ),
+        ChangeNotifierProvider(
+          create: (_) => PermissionProvider(),
         ),
       ],
       child: const MyApp(),
