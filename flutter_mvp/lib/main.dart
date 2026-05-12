@@ -14,7 +14,7 @@ void main() {
             create: (_) => UiStateProvider()
         ),
         ChangeNotifierProvider(
-          create: (_) => PermissionProvider(),
+          create: (_) => PermissionProvider()..updateCameraStatus(),
         ),
       ],
       child: const MyApp(),
