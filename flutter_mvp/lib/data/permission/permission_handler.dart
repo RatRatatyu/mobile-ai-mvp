@@ -11,11 +11,7 @@ class PermissionService {
     if (status.isDenied) {
       status = await Permission.camera.request();
     }
-
-    // Handle the result
-    // Check if the widget is still mounted to avoid "Async Gap" errors
-    if (!context.mounted) return;
-
+    
     if (status.isGranted) {
       Fluttertoast.showToast(msg: 'Camera permission granted');
     } else if (status.isPermanentlyDenied) {
@@ -26,11 +22,6 @@ class PermissionService {
     } else {
       Fluttertoast.showToast(msg: 'Permission is required to continue.');
     }
-  }
-
-  // Initial check for Main.dart (non-UI blocking)
-  static Future<void> initialCheck() async {
-    await Permission.camera.request();
   }
 
   static Future<void> _showPermissionDialog(BuildContext context) async {
