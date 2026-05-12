@@ -19,7 +19,7 @@ Future<List<dynamic>?> apiModel(String path) async {
       data: imageBytes,
       options: Options(
         headers: {
-          "Authorization": "Bearer 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",
+          "Authorization": "Bearer ",
           "Content-Type": "image/jpeg",
         },
       ),

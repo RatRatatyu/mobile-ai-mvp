@@ -6,6 +6,8 @@ import 'package:flutter/material.dart';
 import 'package:flutter_mvp/core/ui_state_provider.dart';
 import 'package:provider/provider.dart';
 
+import '../models/api_model.dart';
+
 class CameraHelper extends StatefulWidget {
   const CameraHelper({super.key});
 
