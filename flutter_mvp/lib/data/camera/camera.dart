@@ -1,12 +1,10 @@
 import 'dart:io';
 
 import 'package:camera/camera.dart';
-import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_mvp/core/ui_state_provider.dart';
 import 'package:provider/provider.dart';
 
-import '../models/api_model.dart';
 
 class CameraHelper extends StatefulWidget {
   const CameraHelper({super.key});
@@ -111,6 +109,7 @@ class _CameraHelperState extends State<CameraHelper> {
                     final image = await _controller?.takePicture();
                     if (image != null) {
                       uiStateProvider.onTakenPhoto(image.path);
+                      uiStateProvider.chooseInterface(image.path);
                     }
                   } catch (e) {
                     debugPrint("Camera error: $e");
