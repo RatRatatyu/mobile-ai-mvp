@@ -17,7 +17,14 @@ class MyHomePage extends StatelessWidget {
       appBar: AppBar(
         title: Text("Flutter App", style: Theme.of(context).textTheme.titleLarge,),
         actions: [
-          Switch(value: true, onChanged: (null))
+          Row(
+            children: [
+              Text("OnServer", style: Theme.of(context).textTheme.bodyMedium,),
+              Switch(value: uiState.isOnDevice, onChanged: (val) => uiState.onChangeMethod(val)),
+              Text("OnDevice", style: Theme.of(context).textTheme.bodyMedium,),
+
+            ],
+          )
         ],
       ),
       body: Column(
@@ -38,7 +45,7 @@ class MyHomePage extends StatelessWidget {
                         style: Theme.of(context).textTheme.headlineSmall,),
                       Text("Увереность: ${uiState.score}%",
                         style: Theme.of(context).textTheme.headlineSmall,),
-                      Text("Время: 0",
+                      Text("Время: ${uiState.timeTaken} мс",
                         style: Theme.of(context).textTheme.headlineSmall,),
 
                     ],
