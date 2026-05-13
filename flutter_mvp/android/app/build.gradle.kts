@@ -38,6 +38,11 @@ android {
         }
     }
 }
+dependencies {
+    implementation("com.google.mlkit:image-labeling:17.0.8")
+    implementation("org.jetbrains.kotlinx:kotlinx-coroutines-play-services:1.7.3")
+    implementation("com.google.android.gms:play-services-base:18.5.0")
+}
 
 flutter {
     source = "../.."
