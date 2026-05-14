@@ -1,5 +1,6 @@
 import 'dart:typed_data';
 import 'package:dio/dio.dart';
+import 'package:flutter/cupertino.dart';
 import 'package:flutter_image_compress/flutter_image_compress.dart';
 
 
@@ -9,7 +10,6 @@ Future<List<dynamic>?> apiModel(String path) async {
   final Uint8List? imageBytes = await compressImage(path);
 
   if (imageBytes == null) {
-    print("Ошибка сжатия");
     return null;
   }
 
@@ -19,17 +19,16 @@ Future<List<dynamic>?> apiModel(String path) async {
       data: imageBytes,
       options: Options(
         headers: {
-          "Authorization": "Bearer ",
+          "Authorization": "Bearer 'your_token'", // put your token fron hugging face here
           "Content-Type": "image/jpeg",
         },
       ),
     );
-    print(response.data);
     return response.data;
 
 
   } on DioException catch (e) {
-    print("Ошибка сети: ${e.message}");
+    debugPrint("Error: $e");
 
   }
   return null;
