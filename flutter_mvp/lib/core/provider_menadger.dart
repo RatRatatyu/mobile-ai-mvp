@@ -7,7 +7,7 @@ class PermissionProvider extends ChangeNotifier {
   bool get isCameraGranted => _isCameraGranted;
 
 
-
+ // The method to check permission during start
   Future<void> updateCameraStatus() async {
     final status = await Permission.camera.status;
     _isCameraGranted = status.isGranted;
