@@ -28,6 +28,7 @@ class UiStateProvider extends ChangeNotifier {
     _latestImage = "";
     _label = "";
     _score = 0;
+    _timeTaken = 0;
     notifyListeners();
   }
 
