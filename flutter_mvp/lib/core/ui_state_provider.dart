@@ -38,6 +38,10 @@ class UiStateProvider extends ChangeNotifier {
   }
 
   Future<void> chooseInterface(String image) async{
+    // Guard clause: prevent multiple clicks
+    if (_isLoading) return;
+
+    // waiting so image from camera can settle in memory before sending it to model
     await Future.delayed(const Duration(milliseconds: 200));
 
 
