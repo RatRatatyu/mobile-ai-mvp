@@ -43,7 +43,7 @@ class MyHomePage extends StatelessWidget {
                     children: [
                       Text("Объект: ${uiState.label}",
                         style: Theme.of(context).textTheme.headlineSmall,),
-                      Text("Увереность: ${uiState.score}%",
+                      Text("Уверенность: ${uiState.score}%",
                         style: Theme.of(context).textTheme.headlineSmall,),
                       Text("Время: ${uiState.timeTaken} мс",
                         style: Theme.of(context).textTheme.headlineSmall,),
