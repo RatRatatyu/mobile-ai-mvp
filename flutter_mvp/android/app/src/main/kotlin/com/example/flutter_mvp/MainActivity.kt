@@ -38,11 +38,12 @@ class MainActivity: FlutterActivity() {
                     result.error("ArgError", "Image path is null", null)
                     return@setMethodCallHandler
                 }
+                // Run ML inference on background thread to avoid blocking UI
                 CoroutineScope(Dispatchers.IO).launch {
                     try {
                           val bitmap = BitmapFactory.decodeFile(imagePath)
                           val resizedBitmap = bitmap.scale(224, 224)
-                        Log.d("MLKIT", "Before process")
+
                           val prediction = analyze(bitmap = resizedBitmap, labeler = labeler)
 
                         val response = mapOf(
@@ -50,6 +51,7 @@ class MainActivity: FlutterActivity() {
                             "confidence" to prediction.confidence
                         )
 
+                        // Return result on main thread
                         withContext(Dispatchers.Main){
                             result.success(response)
                         }
@@ -76,8 +78,6 @@ suspend fun analyze(bitmap: Bitmap, labeler: com.google.mlkit.vision.label.Image
 
     return try {
         val labels = labeler.process(image).await()
-        Log.d("MLKIT", "Labels size = ${labels.size}")
-        Log.d("MLKIT", "After process")
         Prediction(
             label = labels.firstOrNull()?.text ?: "null",
             confidence = labels.firstOrNull()?.confidence ?: 0f
