@@ -14,9 +14,6 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.ViewModelStore
 import androidx.lifecycle.viewModelScope
 import com.example.android_mvp.R
-import com.example.android_mvp.data.camera.CameraHandler
-import com.example.android_mvp.data.camera.apiModel
-import com.example.android_mvp.data.camera.toCorrectlyRotatedBitmap
 import com.example.android_mvp.data.model.MlKitImageLabeler
 import com.example.android_mvp.data.repository.ClassificationRepository
 import kotlinx.coroutines.CoroutineScope
@@ -29,42 +26,27 @@ import kotlinx.coroutines.launch
 
 class MainViewModel(
     private val classificationRepository: ClassificationRepository,
-    private val cameraHelper: CameraHandler
 ): ViewModel(){
 
     private val _uiState = MutableStateFlow(MainUiState())
     val uiState: StateFlow<MainUiState> = _uiState.asStateFlow()
 
-    fun takePhoto(
-    ) {
-        _uiState.update { it.copy(isLoading = true) }
+    fun onTakePhoto(image: Bitmap){
+        _uiState.update { it.copy(latestPhoto = image) }
+    }
 
-        cameraHelper.takePhoto() { bitmap ->
-            _uiState.update { it.copy(latestPhoto = bitmap) }
-
-            viewModelScope.launch {
-                try {
-                    val result = classificationRepository.classify(bitmap, _uiState.value.isOnDevice)
-                    _uiState.update { current ->
-                        current.copy(
-                            classificationText = result.label,
-                            confidenceValue = result.confidence,
-                            timeTakenDuration = result.timeMs,
-                            isLoading = false
-                        )
-                    }
-                } catch (e: Exception) {
-                    _uiState.update { it.copy(isLoading = false) }
-                }
-            }
+    fun onClearPhoto() {
+        _uiState.update {
+            it.copy(
+                latestPhoto = null,
+                timeTakenDuration = 0,
+                classificationText = "",
+                confidenceValue = 0f,
+            )
         }
     }
 
-    fun clearPhoto() {
-        _uiState.update { MainUiState(latestPhoto = null) }
-    }
-
-    fun switchMode(isOnDevice: Boolean) {
-        _uiState.update { it.copy(isOnDevice = !isOnDevice) }
+    fun switchMode() {
+        _uiState.update { it.copy(isOnDevice = !it.isOnDevice) }
     }
 }
