@@ -24,14 +24,12 @@ import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 
-class MainViewModel(
-    private val classificationRepository: ClassificationRepository,
-): ViewModel(){
+class MainViewModel(): ViewModel(){
 
     private val _uiState = MutableStateFlow(MainUiState())
     val uiState: StateFlow<MainUiState> = _uiState.asStateFlow()
 
-    fun onTakePhoto(image: Bitmap){
+    fun onTakePhoto(image: Bitmap?){
         _uiState.update { it.copy(latestPhoto = image) }
     }
 
