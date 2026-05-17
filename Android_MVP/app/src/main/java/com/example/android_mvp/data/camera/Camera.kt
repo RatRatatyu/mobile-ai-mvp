@@ -29,9 +29,11 @@ import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import com.example.android_mvp.R
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.asImageBitmap
 import androidx.compose.ui.graphics.vector.ImageVector
@@ -42,71 +44,51 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.viewinterop.AndroidView
 import androidx.core.content.ContextCompat
 import androidx.lifecycle.compose.LocalLifecycleOwner
-import com.example.android_mvp.R
 
 @Composable
 fun CameraHelper(
     latestPhoto: Bitmap?,
     onTakePhoto: (Bitmap?) -> Unit,
-    onCleanPhoto: () -> Unit,
-    modifier: Modifier
+    onClearPhoto: () -> Unit,
+    modifier: Modifier = Modifier
 ) {
     val context = LocalContext.current
     val lifecycleOwner = LocalLifecycleOwner.current
-    val cameraController = remember() {
+
+    val cameraController = remember {
         LifecycleCameraController(context).apply {
-            cameraSelector = CameraSelector.DEFAULT_BACK_CAMERA
             setEnabledUseCases(CameraController.IMAGE_CAPTURE)
+            cameraSelector = CameraSelector.DEFAULT_BACK_CAMERA
         }
     }
 
-    fun onTakePhoto(
-    ) {
-        val executor = ContextCompat.getMainExecutor(context)
-
-        cameraController.takePicture(
-            executor,
-            object : ImageCapture.OnImageCapturedCallback() {
-                @OptIn(ExperimentalGetImage::class)
-                override fun onCaptureSuccess(image: ImageProxy) {
-
-                    val bitmap = image.toCorrectlyRotatedBitmap()
-                    onTakePhoto(bitmap)
-                    image.close()
-
-                }
-
-                override fun onError(exception: ImageCaptureException) {
-                    Log.e("Camera", "camera error", exception)
-                    onTakePhoto(null)
-
-                }
-            }
-        )
+    LaunchedEffect(cameraController, lifecycleOwner) {
+        cameraController.bindToLifecycle(lifecycleOwner)
     }
 
-    Column(modifier = modifier) {
+    Column(
+        modifier = modifier.fillMaxSize(),
+        horizontalAlignment = Alignment.CenterHorizontally
+    ) {
         Box(
             modifier = Modifier
-                .fillMaxSize()
-                .padding(all = 20.dp)
                 .weight(3f)
-                .clip(RoundedCornerShape(12.dp)),
+                .padding(20.dp)
+                .clip(RoundedCornerShape(12.dp))
+                .fillMaxSize(),
             contentAlignment = Alignment.Center
-        ){
-            if(latestPhoto == null){
+        ) {
+            if (latestPhoto == null) {
                 AndroidView(
-                    modifier = modifier.fillMaxSize(),
-                    factory = {ctx->
+                    factory = { ctx ->
                         PreviewView(ctx).apply {
                             this.controller = cameraController
+                            scaleType = PreviewView.ScaleType.FILL_CENTER
                         }
                     },
-                    update = {
-                        cameraController.bindToLifecycle(lifecycleOwner)
-                    }
+                    modifier = Modifier.fillMaxSize()
                 )
-            }else{
+            } else {
                 Image(
                     bitmap = latestPhoto.asImageBitmap(),
                     contentDescription = stringResource(R.string.photo_description),
@@ -114,43 +96,64 @@ fun CameraHelper(
                     contentScale = ContentScale.Crop
                 )
             }
-
         }
 
         Box(
-            modifier = modifier
-                .fillMaxSize()
-                .padding(20.dp),
+            modifier = Modifier
+                .padding(20.dp)
+                .weight(1f),
             contentAlignment = Alignment.Center
         ) {
-            if(latestPhoto == null){
+            if (latestPhoto == null) {
                 IconButtonHelper(
-                    { onTakePhoto },
-                    Icons.Filled.PhotoCamera,
-                    "Сделать фото"
+                    onClick = { takePhoto(cameraController, context, onTakePhoto) },
+                    icon = Icons.Filled.PhotoCamera,
+                    contentDescription = "Сделать фото"
                 )
-            }else{
+            } else {
                 IconButtonHelper(
-                    { onCleanPhoto },
-                    Icons.Filled.RestartAlt,
-                    "Сфоткать снова"
+                    onClick = onClearPhoto,
+                    icon = Icons.Filled.RestartAlt,
+                    contentDescription = "Сфоткать снова"
                 )
             }
-
         }
-
     }
+}
+
+private fun takePhoto(
+    cameraController: LifecycleCameraController,
+    context: android.content.Context,
+    onTakePhoto: (Bitmap?) -> Unit
+) {
+    val executor = ContextCompat.getMainExecutor(context)
+
+    cameraController.takePicture(
+        executor,
+        object : ImageCapture.OnImageCapturedCallback() {
+            @OptIn(ExperimentalGetImage::class)
+            override fun onCaptureSuccess(image: ImageProxy) {
+                val bitmap = image.toCorrectlyRotatedBitmap()
+                onTakePhoto(bitmap)
+                image.close()
+            }
+
+            override fun onError(exception: ImageCaptureException) {
+                Log.e("Camera", "Capture error", exception)
+                onTakePhoto(null)
+            }
+        }
+    )
 }
 
 @Composable
 fun IconButtonHelper(
-    onClickFun: () -> Unit,
+    onClick: () -> Unit,
     icon: ImageVector,
-    contectDescriptionText: String,
+    contentDescription: String,
 ) {
-
     IconButton(
-        onClick = onClickFun,
+        onClick = onClick,
         modifier = Modifier
             .size(72.dp)
             .clip(CircleShape)
@@ -158,14 +161,12 @@ fun IconButtonHelper(
     ) {
         Icon(
             imageVector = icon,
-            contentDescription = contectDescriptionText,
+            contentDescription = contentDescription,
             modifier = Modifier.size(42.dp),
             tint = MaterialTheme.colorScheme.inversePrimary
         )
     }
-
 }
-
 fun ImageProxy.toCorrectlyRotatedBitmap(): Bitmap {
     val buffer = planes[0].buffer
     val bytes = ByteArray(buffer.remaining())
@@ -187,5 +188,3 @@ fun ImageProxy.toCorrectlyRotatedBitmap(): Bitmap {
         true
     )
 }
-
-
