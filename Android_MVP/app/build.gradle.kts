@@ -56,6 +56,7 @@ android {
 }
 
 dependencies {
+    implementation(libs.androidx.lifecycle.view.model)
     implementation(libs.web.squareup.logging)
     implementation(libs.web.squareup.retrofit)
     implementation(libs.web.squareup.okhttp3)

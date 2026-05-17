@@ -8,16 +8,18 @@ espressoCore = "3.7.0"
 lifecycleRuntimeKtx = "2.10.0"
 activityCompose = "1.13.0"
 composeBom = "2024.09.00"
-camerax = "1.6.0"
+camerax = "1.6.1"
 coil = "2.7.0"
 foundation = "1.11.1"
 ui = "1.11.1"
-imageLabeling = "17.0.5"
+imageLabeling = "17.0.9"
 networking = "2.9.0"
 convertingJson = "2.9.0"
 logging = "4.10.0"
+viewModel = "2.10.0"
 
 [libraries]
+androidx-lifecycle-view-model ={group = "androidx.lifecycle", name = "lifecycle-viewmodel-compose", version.ref ="viewModel"}
 web-squareup-retrofit ={ group = "com.squareup.retrofit2", name = "retrofit", version.ref = "networking" }
 web-squareup-logging = {group = "com.squareup.retrofit2",  name = "converter-gson",version.ref = "convertingJson" }
 web-squareup-okhttp3 = { group = "com.squareup.okhttp3", name = "logging-interceptor", version.ref = "logging" }
