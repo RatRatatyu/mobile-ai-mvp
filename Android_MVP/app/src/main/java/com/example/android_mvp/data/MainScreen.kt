@@ -7,6 +7,7 @@ import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.Button
+import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Scaffold
@@ -41,12 +42,6 @@ fun MainScreen(
 ) {
 
     val uiStateModel  by viewModel.uiState.collectAsStateWithLifecycle()
-
-
-    var classificationText by remember { mutableStateOf("") }
-    var confidenceValue by remember { mutableFloatStateOf(0f) }
-    var timeTakenDuration by remember { mutableLongStateOf(0) }
-
 
     Scaffold(
         modifier = modifier.fillMaxSize(),
@@ -105,9 +100,10 @@ fun MainScreen(
             }
 
             ModelResult(
-                classificationText,
-                confidenceValue,
-                timeTakenDuration,
+                uiStateModel.classificationText,
+                uiStateModel.confidenceValue,
+                uiStateModel.timeTakenDuration,
+                uiStateModel.isLoading,
                 modifier = Modifier.weight(1f)
             )
 
@@ -121,6 +117,7 @@ fun ModelResult(
     classificationText: String,
     confidenceValue: Float,
     timeTakenDuration: Long,
+    isLoading: Boolean,
     modifier: Modifier = Modifier
 ) {
     Box(
@@ -128,24 +125,28 @@ fun ModelResult(
             .fillMaxSize()
             .padding(all = 20.dp)
             .clip(RoundedCornerShape(12.dp)),
-        contentAlignment = Alignment.CenterStart
+        contentAlignment = if (isLoading) Alignment.Center else Alignment.CenterStart
     ){
 
         Column {
-            Text(
-                text = "Объект: $classificationText",
-                style = MaterialTheme.typography.headlineSmall
-            )
+            if(isLoading){
+                CircularProgressIndicator()
+            }else{
+                Text(
+                    text = "Объект: $classificationText",
+                    style = MaterialTheme.typography.headlineSmall
+                )
 
-            Text(
-                text = "Уверенность: ${(confidenceValue * 100).toInt()}%",
-                style = MaterialTheme.typography.headlineSmall
-            )
+                Text(
+                    text = "Уверенность: ${(confidenceValue * 100).toInt()}%",
+                    style = MaterialTheme.typography.headlineSmall
+                )
 
-            Text(
-                text = "Время предсказания: $timeTakenDuration мс",
-                style = MaterialTheme.typography.headlineSmall
-            )
+                Text(
+                    text = "Время предсказания: $timeTakenDuration мс",
+                    style = MaterialTheme.typography.headlineSmall
+                )
+            }
         }
     }
 }
