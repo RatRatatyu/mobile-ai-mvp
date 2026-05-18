@@ -1,58 +1,31 @@
 package com.example.android_mvp.core
 
-import android.Manifest
-import android.app.AlertDialog
-import android.content.pm.PackageManager
-import androidx.activity.ComponentActivity
-import androidx.activity.result.contract.ActivityResultContracts
-import androidx.core.content.ContextCompat
-
-class MainPresenter(
-    private val view: MainContract.View,
-    private val activity: ComponentActivity
-) : MainContract.Presenter {
+import androidx.lifecycle.ViewModel
+import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.flow.StateFlow
+import kotlinx.coroutines.flow.asStateFlow
+import kotlinx.coroutines.flow.update
 
 
-    private val requestPermissionLauncher = activity.registerForActivityResult(
-        ActivityResultContracts.RequestPermission()
-    ) { isGranted ->
-        view.hasPermission(isGranted)
+data class PermissionState(
+    val hasPermission: Boolean = false,
+    val showRationaleDialog: Boolean = false
+)
 
-    }
+class PermissionHandler : ViewModel() {
 
-    override fun checkCameraPermission() {
-        val permissionStatus = ContextCompat.checkSelfPermission(
-            activity, Manifest.permission.CAMERA
-        )
+    private val _uiState = MutableStateFlow(PermissionState())
+    val uiState: StateFlow<PermissionState> = _uiState.asStateFlow()
 
-        when {
-            // already have permission
-            permissionStatus == PackageManager.PERMISSION_GRANTED -> {
-                view.hasPermission(true)
-            }
-
-            // showing why we need permission if user decline earlier
-            activity.shouldShowRequestPermissionRationale(Manifest.permission.CAMERA) -> {
-                 showRationaleAndRequest()
-            }
-
-            // first try or permanently denied
-            else -> {
-                requestPermissionLauncher.launch(Manifest.permission.CAMERA)
-            }
+    fun onPermissionCheckResult(isGranted: Boolean) {
+        _uiState.update {
+            it.copy(hasPermission = isGranted)
         }
     }
 
-    private fun showRationaleAndRequest() {
-        AlertDialog.Builder(activity)
-            .setTitle("Нужен доступ к камере")
-            .setMessage("Приложению нужна камера, чтобы делать фото и отправлять их на сервер для обработки.")
-            .setPositiveButton("Продолжить") { _, _ ->
-                requestPermissionLauncher.launch(Manifest.permission.CAMERA)
-            }
-            .setNegativeButton("Отмена", null)
-            .show()
+    fun setShowRationale(show: Boolean) {
+        _uiState.update {
+            it.copy(showRationaleDialog = show)
+        }
     }
-
 }
-

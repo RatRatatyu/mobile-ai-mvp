@@ -5,35 +5,29 @@ import android.util.Log
 import com.google.mlkit.vision.common.InputImage
 import com.google.mlkit.vision.label.ImageLabeling
 import com.google.mlkit.vision.label.defaults.ImageLabelerOptions
+import kotlinx.coroutines.tasks.await
 
+class MlKitImageLabeler {
 
-class MlKitImageLabeler{
-     val options = ImageLabelerOptions.Builder()
-     .setConfidenceThreshold(0.4f)
-     .build()
+    private val options = ImageLabelerOptions.Builder()
+        .setConfidenceThreshold(0.4f)
+        .build()
 
-     val labeler = ImageLabeling.getClient(options)
+    private val labeler = ImageLabeling.getClient(options)
 
+    suspend fun analyze(bitmap: Bitmap): Pair<String, Float> {
+        return try {
+            val image = InputImage.fromBitmap(bitmap, 0)
+            val labels = labeler.process(image).await()
 
-    fun analyze( bitmap: Bitmap, onResult: (String, Float, Long) -> Unit){
-        val startTime = System.currentTimeMillis()
-        val image = InputImage.fromBitmap(bitmap, 0)
+            val firstLabel = labels.firstOrNull()
+                ?: return "Не распознано" to 0f
 
-        labeler.process(image)
-            .addOnSuccessListener { labels ->
-                val endTime = System.currentTimeMillis()
-                val duration = endTime - startTime
-                onResult(labels.firstOrNull()?.text ?: "null", labels.firstOrNull()?.confidence ?: 0f, duration)
+            firstLabel.text to firstLabel.confidence
 
-
-            }
-            .addOnFailureListener { e ->
-                Log.e("error", "",e)
-
-
-            }
+        } catch (e: Exception) {
+            Log.e("MLKit", "Analyze error", e)
+            "Ошибка ML Kit" to 0f
+        }
     }
-
 }
-
-

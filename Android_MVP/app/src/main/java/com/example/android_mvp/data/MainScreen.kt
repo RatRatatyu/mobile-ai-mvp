@@ -1,26 +1,14 @@
 package com.example.android_mvp.data
 
-import android.graphics.Bitmap
-import androidx.camera.core.CameraSelector
-import androidx.camera.view.CameraController
-import androidx.camera.view.LifecycleCameraController
-import androidx.compose.foundation.Image
-import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.layout.size
-import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
-import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.PhotoCamera
-import androidx.compose.material.icons.filled.RestartAlt
 import androidx.compose.material3.Button
+import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.ExperimentalMaterial3Api
-import androidx.compose.material3.Icon
-import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Switch
@@ -28,51 +16,27 @@ import androidx.compose.material3.Text
 import androidx.compose.material3.TopAppBar
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
-import androidx.compose.runtime.mutableFloatStateOf
-import androidx.compose.runtime.mutableLongStateOf
-import androidx.compose.runtime.mutableStateOf
-import androidx.compose.runtime.remember
-import androidx.compose.runtime.rememberCoroutineScope
-import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
-import androidx.compose.ui.graphics.asImageBitmap
-import androidx.compose.ui.layout.ContentScale
-import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.stringResource
-import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
-import androidx.lifecycle.compose.LocalLifecycleOwner
+import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.example.android_mvp.R
-import com.example.android_mvp.data.camera.CameraPreview
-import com.example.android_mvp.data.camera.takePhoto
+import com.example.android_mvp.data.camera.CameraHelper
+import com.example.android_mvp.presentation.MainViewModel
 
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun MainScreen(
+    viewModel: MainViewModel,
     hasPermission: Boolean,
     onRequestCameraClick: () -> Unit,
     modifier: Modifier = Modifier
 ) {
-    var latestPhoto by remember { mutableStateOf<Bitmap?>(null) }
 
-    val context = LocalContext.current
-    val lifecycleOwner = LocalLifecycleOwner.current
-    val cameraController = remember(latestPhoto == null) {
-        LifecycleCameraController(context).apply {
-            cameraSelector = CameraSelector.DEFAULT_BACK_CAMERA
-            setEnabledUseCases(CameraController.IMAGE_CAPTURE)
-        }
-    }
-    val scope = rememberCoroutineScope()
-    var isOnDevice by remember { mutableStateOf(true) }
-
-    var classificationText by remember { mutableStateOf("") }
-    var confidenceValue by remember { mutableFloatStateOf(0f) }
-    var timeTakenDuration by remember { mutableLongStateOf(0) }
-
+    val uiStateModel  by viewModel.uiState.collectAsStateWithLifecycle()
 
     Scaffold(
         modifier = modifier.fillMaxSize(),
@@ -90,8 +54,8 @@ fun MainScreen(
                             "OnServer",
                             style = MaterialTheme.typography.bodySmall,)
                         Switch(
-                            checked = isOnDevice,
-                            onCheckedChange = { isOnDevice = !isOnDevice })
+                            checked = uiStateModel.isOnDevice,
+                            onCheckedChange = { viewModel.switchMode()})
                         Text(
                             "OnDevice",
                             style = MaterialTheme.typography.bodySmall,)
@@ -112,59 +76,29 @@ fun MainScreen(
                 modifier = Modifier
                     .fillMaxSize()
                     .padding(all = 20.dp)
-                    .weight(2f)
-                    .clip(RoundedCornerShape(12.dp)),
+                    .weight(3f),
                 contentAlignment = Alignment.Center
             ) {
                 if (hasPermission) {
-                    if(latestPhoto == null) { //showing camera if image is null
-                        CameraPreview(
-                            cameraController, lifecycleOwner, modifier
-                        )
-                    }else{
-                            Image( //showing image instead of camera
-                                bitmap = latestPhoto!!.asImageBitmap(),
-                                contentDescription = stringResource(R.string.photo_description),
-                                modifier = Modifier.fillMaxSize(),
-                                contentScale = ContentScale.Crop
-                            )
-
-                    }
+                    CameraHelper(
+                        uiStateModel.latestPhoto,
+                        onTakePhoto = { bitmap ->
+                            viewModel.onTakePhoto(bitmap)
+                        },
+                        onClearPhoto = {
+                            viewModel.onClearPhoto()
+                        },
+                        modifier = Modifier)
                 } else { //showing button to get camera permission
                     Button(onClick = onRequestCameraClick) { Text(stringResource(R.string.ask_permission_button)) }
                 }
             }
-            ButtonsController(
-                onTakePhotoClick = {
-                    takePhoto(
-                        cameraController = cameraController,
-                        context = context,
-                        onClassificationResult = { label, confidence, duration ->
-                            timeTakenDuration = duration
-                            classificationText = label
-                            confidenceValue = confidence
-                        },
-                        isOnDevice = isOnDevice,
-                        scope = scope,
-                        onPhotoTaken = { bitmap ->
-                            latestPhoto = bitmap
-                        }
-                    )
-                },
-                onClearPhotoClick = {
-                    latestPhoto = null
-                    classificationText = ""
-                    confidenceValue = 0f
-
-                },
-                latestPhoto = latestPhoto,
-                modifier = Modifier.weight(1f)
-            )
 
             ModelResult(
-                classificationText,
-                confidenceValue,
-                timeTakenDuration,
+                uiStateModel.classificationText,
+                uiStateModel.confidenceValue,
+                uiStateModel.timeTakenDuration,
+                uiStateModel.isLoading,
                 modifier = Modifier.weight(1f)
             )
 
@@ -178,6 +112,7 @@ fun ModelResult(
     classificationText: String,
     confidenceValue: Float,
     timeTakenDuration: Long,
+    isLoading: Boolean,
     modifier: Modifier = Modifier
 ) {
     Box(
@@ -185,84 +120,29 @@ fun ModelResult(
             .fillMaxSize()
             .padding(all = 20.dp)
             .clip(RoundedCornerShape(12.dp)),
-        contentAlignment = Alignment.CenterStart
+        contentAlignment = if (isLoading) Alignment.Center else Alignment.CenterStart
     ){
 
         Column {
-            Text(
-                text = "Объект: $classificationText",
-                style = MaterialTheme.typography.headlineSmall
-            )
-
-            Text(
-                text = "Уверенность: ${(confidenceValue * 100).toInt()}%",
-                style = MaterialTheme.typography.headlineSmall
-            )
-
-            Text(
-                text = "Время предсказания: $timeTakenDuration мс",
-                style = MaterialTheme.typography.headlineSmall
-            )
-        }
-    }
-}
-@Composable
-fun ButtonsController(
-    onTakePhotoClick: () -> Unit,
-    onClearPhotoClick: () -> Unit,
-    latestPhoto: Bitmap?,
-    modifier: Modifier = Modifier,
-
-) {
-    Box(
-        modifier = modifier
-            .fillMaxSize()
-            .padding(20.dp),
-        contentAlignment = Alignment.Center
-    ) {
-        if(latestPhoto == null){
-            IconButton(
-                onClick = onTakePhotoClick,
-                modifier = Modifier
-                    .size(72.dp)
-                    .clip(CircleShape)
-                    .background(MaterialTheme.colorScheme.primary)
-            ) {
-                Icon(
-                    imageVector = Icons.Filled.PhotoCamera,
-                    contentDescription = "Сделать фото",
-                    modifier = Modifier.size(42.dp),
-                    tint = MaterialTheme.colorScheme.inversePrimary
+            if(isLoading){
+                CircularProgressIndicator()
+            }else{
+                Text(
+                    text = "Объект: $classificationText",
+                    style = MaterialTheme.typography.headlineSmall
                 )
-            }
-        }else{
-            IconButton(
-                onClick = onClearPhotoClick,
-                modifier = Modifier
-                    .size(72.dp)
-                    .clip(CircleShape)
-                    .background(MaterialTheme.colorScheme.primary)
-            ) {
-                Icon(
-                    imageVector = Icons.Filled.RestartAlt,
-                    contentDescription = "Сфоткать снова",
-                    modifier = Modifier.size(42.dp),
-                    tint = MaterialTheme.colorScheme.inversePrimary
+
+                Text(
+                    text = "Уверенность: ${(confidenceValue * 100).toInt()}%",
+                    style = MaterialTheme.typography.headlineSmall
+                )
+
+                Text(
+                    text = "Время предсказания: $timeTakenDuration мс",
+                    style = MaterialTheme.typography.headlineSmall
                 )
             }
         }
-
     }
 }
 
-@Preview
-@Composable
-private fun PreviewMainScreen() {
-    MaterialTheme {
-        MainScreen(
-            true,
-            {}
-        )
-    }
-
-}
