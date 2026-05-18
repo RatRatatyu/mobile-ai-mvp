@@ -1,23 +1,10 @@
 package com.example.android_mvp.presentation
 
-import android.content.Context
 import android.graphics.Bitmap
-import android.util.Log
-import androidx.annotation.OptIn
-import androidx.camera.core.ExperimentalGetImage
-import androidx.camera.core.ImageCapture
-import androidx.camera.core.ImageCaptureException
-import androidx.camera.core.ImageProxy
-import androidx.camera.view.LifecycleCameraController
-import androidx.core.content.ContextCompat
 import androidx.lifecycle.ViewModel
-import androidx.lifecycle.ViewModelStore
 import androidx.lifecycle.viewModelScope
-import com.example.android_mvp.R
+import com.example.android_mvp.data.model.ApiModel
 import com.example.android_mvp.data.model.MlKitImageLabeler
-import com.example.android_mvp.data.repository.ClassificationRepository
-import kotlinx.coroutines.CoroutineScope
-import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
@@ -28,9 +15,12 @@ class MainViewModel(): ViewModel(){
 
     private val _uiState = MutableStateFlow(MainUiState())
     val uiState: StateFlow<MainUiState> = _uiState.asStateFlow()
+    val mlKit = MlKitImageLabeler()
+    val apiModel = ApiModel()
 
     fun onTakePhoto(image: Bitmap?){
         _uiState.update { it.copy(latestPhoto = image) }
+        classifyImage(image)
     }
 
     fun onClearPhoto() {
@@ -46,5 +36,43 @@ class MainViewModel(): ViewModel(){
 
     fun switchMode() {
         _uiState.update { it.copy(isOnDevice = !it.isOnDevice) }
+    }
+
+
+    private fun classifyImage(bitmap: Bitmap?) {
+        if (bitmap == null) return
+        _uiState.update {
+            it.copy(isLoading = true)
+        }
+        viewModelScope.launch {
+            val startTime = System.currentTimeMillis()
+
+            try {
+                val (label, confidence) = if (_uiState.value.isOnDevice) {
+                    mlKit.analyze(bitmap!!)
+                } else {
+                    apiModel.classifyImage(bitmap!!)
+                }
+
+                val duration = System.currentTimeMillis() - startTime
+
+                _uiState.update {
+                    it.copy(
+                        classificationText = label,
+                        confidenceValue = confidence,
+                        timeTakenDuration = duration,
+                        isLoading = false
+                    )
+                }
+            } catch (e: Exception) {
+                _uiState.update {
+                    it.copy(
+                        classificationText = "Ошибка",
+                        confidenceValue = 0f,
+                        timeTakenDuration = 0L
+                    )
+                }
+            }
+        }
     }
 }
