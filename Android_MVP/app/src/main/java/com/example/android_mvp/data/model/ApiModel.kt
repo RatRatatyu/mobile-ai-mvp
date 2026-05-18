@@ -29,10 +29,7 @@ interface HuggingFaceApi {
         @Header("Authorization") token: String,
         @Body body: RequestBody
     ): List<PredictionResponse>
-
-
 }
-
 class ApiModel(){
     private val retrofit = Retrofit.Builder()
         .baseUrl("https://router.huggingface.co/hf-inference/")
@@ -41,55 +38,31 @@ class ApiModel(){
 
     val service: HuggingFaceApi = retrofit.create(HuggingFaceApi::class.java)
 
-     suspend fun classifyImage(imageBitmap: Bitmap, onResult: (String, Float, Long) -> Unit){
+     suspend fun classifyImage(imageBitmap: Bitmap): Pair<String, Float>{
+        return try {
+            val imageToButeArray = compressBitmap((imageBitmap))
+            val requestBody = imageToButeArray.toRequestBody("image/jpeg".toMediaTypeOrNull())
 
-         val startTime = System.currentTimeMillis()
-        val imageToButeArray = compressBitmap((imageBitmap))
-        val requestBody = imageToButeArray.toRequestBody("image/jpeg".toMediaTypeOrNull())
-
-        try {
             val result = service.postImage(
                 "models/google/vit-base-patch16-224",
                 "Bearer $token",
                 requestBody
             )
-            val endTime = System.currentTimeMillis()
-            val duration = endTime - startTime
-            onResult(result.firstOrNull()?.label ?: "null", result.firstOrNull()?.score ?: 0f, duration)
+            val firstLabel = result.firstOrNull()
+                ?: return "Не распознано" to 0f
+
+            firstLabel.label to firstLabel.score
 
 
 
         }catch (e: Exception){
             Log.e("network", "Request failed", e)
+            "Oшибка сервера" to 0f
 
         }
     }
 
-
-
-
-
 }
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
 
 
 // function to compress image to byte array
