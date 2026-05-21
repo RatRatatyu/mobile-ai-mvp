@@ -26,7 +26,22 @@ This repository contains two MVP applications developed for the International Sc
 
 # 📱 Project Overview
 
-The project explores the architectural choice between running AI models directly on a smartphone (**On-Device**) versus processing them on a remote server (**On-Server**).
+The project explores the architectural choice between running AI models directly on a smartphone (On-Device) versus processing them on a remote server (On-Server)
+
+For this research, image classification was chosen as the primary use case to demonstrate the differences in performance and accuracy
+
+### 🤖 Applied Models
+On-Device: Powered by the ML Kit Image Labeling API from Google for local, real-time inference
+
+On-Server: Powered by the Hugging Face google/vit-base-patch16-224 model (Vision Transformer), accessed via REST API for high-precision processing
+
+### ⚙️ Cross-Platform Methodology
+
+It is important to note that while the development environments differ, the methodology, architectural logic, and implementation steps remain virtually identical across both platforms—Android (Jetpack Compose) and Flutter
+
+This consistency ensures that the results of the study—such as the trade-offs between latency (94ms vs 2000ms+) and accuracy—are directly comparable, regardless of whether the app is native or cross-platform
+
+This approach can be easily adapted for other AI tasks beyond image classification, such as text recognition or object detection
 
 ---
 
@@ -60,21 +75,20 @@ Implementation on Android is generally more straightforward because tools like *
 Managing camera permissions and hardware access is more intuitive within the native Android ecosystem.
 
 Native Android remains the most effective choice for deep, high-performance ML integration.
+![android.png](screenShots/android.png)
 
 ---
 
 ## Flutter (Cross-platform)
 
-Implementation on Flutter is more complex due to the nature of the Dart language, which is not designed for heavy, intensive mathematical calculations.
-
-To achieve optimal performance on Flutter, a **Method Channel (Method Bridge)** system was implemented.
+Implementation on Flutter involves a more sophisticated architecture to ensure high performance and UI responsiveness. To optimize the interaction between cross-platform code and native system resources, a Method Channel (Method Bridge) system was implemented
 
 This architecture allows the application to:
-
-1. Capture the request in the Flutter layer.
-2. Pass the task to the Native Layer (Kotlin/Swift) via the bridge.
-3. Process the model using the device's native OS capabilities.
-4. Return the result back to the Flutter UI layer.
+1. Capture the input data (such as image frames) within the Flutter UI layer
+2. Delegate the intensive computation task to the Native Layer (Kotlin/Swift) via the Method Channel bridge to avoid blocking the main thread
+3. Process the AI model using the device's native OS capabilities and hardware acceleration (CPU/GPU) for maximum efficiency
+4. Synchronize and return the result back to the Flutter layer for an immediate and smooth update of the user interface
+![flutter.png](screenShots/flutter.png)
 
 ---
 
