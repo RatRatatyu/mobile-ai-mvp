@@ -60,7 +60,7 @@ Implementation on Android is generally more straightforward because tools like *
 Managing camera permissions and hardware access is more intuitive within the native Android ecosystem.
 
 Native Android remains the most effective choice for deep, high-performance ML integration.
-![android.png](screenShots/android.png)
+
 ---
 
 ## Flutter (Cross-platform)
@@ -75,7 +75,7 @@ This architecture allows the application to:
 2. Pass the task to the Native Layer (Kotlin/Swift) via the bridge.
 3. Process the model using the device's native OS capabilities.
 4. Return the result back to the Flutter UI layer.
-![flutter.png](screenShots/flutter.png)
+
 ---
 
 # 📂 Repository Structure
